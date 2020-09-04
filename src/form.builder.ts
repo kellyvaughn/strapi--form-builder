@@ -13,7 +13,8 @@ export default class StrapiForm {
   private blacklistedProps = ["id", "users"];
   private whitelistKeys = ["__component", "__label"];
   private apiContentType: any = {};
-  private formattedSchema: any = {};
+  public fields: any = {};
+  public request: any = {};
   private apiID: string = "";
   private strapiSDK: any;
   public existingModel: object;
@@ -87,16 +88,16 @@ export default class StrapiForm {
           this.isValidType(key, parent[key])) ||
         this.whitelistKeys.includes(key)
       ) {
-        this.formattedSchema[key] = parent[key];
+        this.fields[key] = parent[key];
       }
 
       if (this.isComponent(parent[key])) {
-        const componentAttrs = this.apiContentType.components[
-          parent[key].component
-        ].schema.attributes;
-        componentAttrs.__component = parent[key].component;
+        const id = parent[key].component;
+        const componentAttrs = this.apiContentType.components[id].schema
+          .attributes;
+        componentAttrs.__component = id;
         componentAttrs.__label = key;
-        this.formattedSchema.content.push(componentAttrs);
+        this.fields.content.push(componentAttrs);
         this.gatherSchema(componentAttrs);
       }
     });
@@ -105,6 +106,7 @@ export default class StrapiForm {
   async getFormSchema() {
     await this.getContentType();
     this.gatherSchema();
-    return this.formattedSchema;
+    this.request = { ...this.fields };
+    return this.fields;
   }
 }

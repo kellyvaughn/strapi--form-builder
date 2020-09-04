@@ -1,15 +1,15 @@
 {
-  "name": "strapi-form-builder",
+  "name": "@thetaproom/strapi-form-builder",
   "version": "1.0.0",
-  "description": "",
+  "description": "A simple library for generating form data and form requests using the content manager API",
   "main": "index.js",
   "scripts": {
     "build": "webpack --progress --colors",
     "start": "webpack-dev-server --progress --colors",
     "test": "jest"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Jeremiah Wodke",
+  "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.10.5",
     "@babel/preset-env": "^7.10.4",
@@ -31,5 +31,20 @@
   },
   "dependencies": {
     "@thetaproom/strapi-sdk-javascript": "^0.4.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/the-taproom/strapi--form-builder.git"
+  },
+  "keywords": [
+    "form",
+    "strapi",
+    "js",
+    "node",
+    "builder"
+  ],
+  "bugs": {
+    "url": "https://github.com/the-taproom/strapi--form-builder/issues"
+  },
+  "homepage": "https://github.com/the-taproom/strapi--form-builder#readme"
 }
