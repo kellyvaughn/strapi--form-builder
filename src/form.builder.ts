@@ -16,18 +16,16 @@ export default class StrapiForm {
   private apiContentType: any = {};
   public fields: any = {};
   public request: any = {};
-  private apiID: string = "";
-  private strapiSDK: any;
+  public apiID: string = "";
+  public strapiSDK: any;
   public existingModel: object;
 
   constructor(
     baseURL: string,
     contentType: any,
-    strapiSDk: any,
-    existingModel?: any
+    strapiSDk: any
   ) {
     this.strapiSDK = strapiSDk;
-    this.existingModel = existingModel;
     this.baseURL = baseURL;
     this.url = `${this.baseURL}/content-manager/content-types/${contentType}`;
   }
@@ -44,6 +42,32 @@ export default class StrapiForm {
 
     this.apiContentType = json.data;
     this.apiID = this.apiContentType.contentType.apiID;
+  }
+
+  async getExistingEntry(params: any) {
+    return await this.strapiSDK.getEntries(this.apiID, params);
+  }
+
+  setRequestBody() {
+    Object.keys(this.fields).map(key => {
+      if (this.fields[key] && key !== "content") {
+        this.fields[key] = this.fields[key].value
+      }
+
+      this.fields.content.map((component: any) => {
+        if (component.__label === key) {
+          component.value = this.existingModel[key];
+        }
+      });
+    });
+  }
+
+  updateSchema(key: string, value: string, parent: string) {
+    if (parent) {
+      this.fields[parent][key] = value;
+    } else {
+      this.fields[key] = value;
+    }
   }
 
   async create(data: any) {
@@ -80,7 +104,7 @@ export default class StrapiForm {
     );
   }
 
-  gatherSchema(parent?: any) {
+  gatherSchema(parent?: any, componentKey?: string) {
     parent = parent || this.apiContentType.contentType.schema.attributes;
 
     Object.keys(parent).map((key) => {
@@ -90,6 +114,10 @@ export default class StrapiForm {
         this.whitelistKeys.includes(key)
       ) {
         this.fields[key] = parent[key];
+        this.fields[key].__label = key;
+        this.fields[key].value = componentKey
+          ? this.existingModel[componentKey][key]
+          : this.existingModel[key];
       }
 
       if (this.isComponent(parent[key])) {
@@ -104,10 +132,10 @@ export default class StrapiForm {
     });
   }
 
-  async getFormSchema() {
+  async getFormSchema(params: any) {
+    this.existingModel = await this.getExistingEntry(params);
     await this.getContentType();
     this.gatherSchema();
-    this.request = { ...this.fields };
     return this.fields;
   }
 }
