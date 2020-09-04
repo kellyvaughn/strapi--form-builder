@@ -1,6 +1,6 @@
 {
   "name": "@thetaproom/strapi-form-builder",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A simple library for generating form data and form requests using the content manager API",
   "main": "index.js",
   "scripts": {
