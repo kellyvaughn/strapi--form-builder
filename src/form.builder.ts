@@ -2,6 +2,7 @@ export default class StrapiForm {
   private baseURL: string;
   private url: string;
   private acceptedTypes = [
+    "string",
     "text",
     "integer",
     "media",
