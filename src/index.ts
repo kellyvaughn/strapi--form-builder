@@ -1,6 +1,7 @@
 import StrapiSDKProvider from "@thetaproom/strapi-sdk-javascript";
 import StrapiFormBuilder from "./form.builder";
-import { StrapiFormMethodsDecorator, FormActionable } from "./form.actions";
+import { StrapiFormMethodsDecorator } from "./form.actions";
+import { FormActionable } from "./interfaces";
 
 interface Authentication {
   identifier: string,
@@ -22,6 +23,10 @@ export class Factory {
       fields: await new StrapiFormBuilder(this.baseURL, contentTypeUID).getSchema(existingEntry),
       actions: new StrapiFormMethodsDecorator(contentTypeUID, this.sdk)
     }
+  }
+
+  getFormBuilder(contentTypeUID: string) {
+    return new StrapiFormBuilder(this.baseURL, contentTypeUID)
   }
 
   getActions(contentTypeUID: string) {

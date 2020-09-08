@@ -6,7 +6,7 @@
   <title>Document</title>
 </head>
 <body>
-  <script src="./mocks/content-type.response.js"></script>
+  <!-- <script src="./mocks/content-type.response.js"></script> -->
   <script src="./dist/main.js"></script>
   <script>
     const baseURL = "https://recharge-settings.herokuapp.com";
@@ -23,22 +23,19 @@
       "_limit": 1
     };
 
-    const handle = schema => {
-      debugger;
-    };
-
     const existingEntries = Client.getEntries("global-settings", {
       "_where[users.domain_contains]": "flutterhabit",
       "_limit": 1
     }).then(entries => {
-    debugger;
     /**
      * This function does the following:
      * - it gets the contentType from your Strapi API
      * - looks for an existing entry based on params i.e. _where[users.domain_contains]
      * - if an existing records is set
      */
-      FormFactory.getForm(contentType, existing && existing[0]).then(handle);
+      FormFactory.getForm(contentType, entries && entries[0]).then(schema => {
+        debugger;
+      });
     });
   </script>
 </body>
