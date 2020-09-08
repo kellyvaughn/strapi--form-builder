@@ -1,3 +1,5 @@
+import { StrapiFormMethodsDecorator } from "./form.actions";
+
 export default class StrapiForm {
   private baseURL: string;
   private url: string;
@@ -13,39 +15,27 @@ export default class StrapiForm {
   ];
   private blacklistedProps = ["id", "users"];
   private whitelistKeys = ["__component", "__label"];
-  private apiContentType: any = {};
+  private contentTypeUID: any = {};
   public fields: any = {};
   public request: any = {};
-  public apiID: string = "";
-  public strapiSDK: any;
   public existingModel: object;
 
   constructor(
     baseURL: string,
-    contentType: any,
-    strapiSDk: any
+    contentTypeUID: string
   ) {
-    this.strapiSDK = strapiSDk;
     this.baseURL = baseURL;
-    this.url = `${this.baseURL}/content-manager/content-types/${contentType}`;
+    this.contentTypeUID = contentTypeUID;
+    this.url = `${this.baseURL}/content-manager/content-types/${this.contentTypeUID}`;
   }
 
-  get appUrl() {
-    return `${this.baseURL}/${this.apiID}`;
-  }
-
-  async getContentType() {
-    const res = await fetch(this.url);
+  async getContentType(): Promise<void> {
+    const res = await fetch(`${this.url}/${this.contentTypeUID}`);
     const json = await res.json();
 
-    if (typeof json !== "object" && json.data) return {};
+    if (typeof json !== "object") return;
 
-    this.apiContentType = json.data;
-    this.apiID = this.apiContentType.contentType.apiID;
-  }
-
-  async getExistingEntry(params: any) {
-    return await this.strapiSDK.getEntries(this.apiID, params);
+    this.contentTypeUID = json.data;
   }
 
   setRequestBody() {
@@ -70,22 +60,6 @@ export default class StrapiForm {
     }
   }
 
-  async create(data: any) {
-    return await this.strapiSDK.createEntry(this.apiID, data);
-  }
-
-  async update(id: any, data: any) {
-    return await this.strapiSDK.updateEntry(this.apiID, id, data);
-  }
-
-  async search(params: any) {
-    return await this.strapiSDK.getEntries(this.apiID, params);
-  }
-
-  async delete(id: any) {
-    return await this.strapiSDK.deleteEntry(this.apiID, id);
-  }
-
   isBuildable(field: any) {
     return field && field.type && this.acceptedTypes.includes(field.type);
   }
@@ -105,7 +79,7 @@ export default class StrapiForm {
   }
 
   gatherSchema(parent?: any, componentKey?: string) {
-    parent = parent || this.apiContentType.contentType.schema.attributes;
+    parent = parent || this.contentTypeUID.contentTypeUID.schema.attributes;
 
     Object.keys(parent).map((key) => {
       if (
@@ -122,7 +96,7 @@ export default class StrapiForm {
 
       if (this.isComponent(parent[key])) {
         const id = parent[key].component;
-        const componentAttrs = this.apiContentType.components[id].schema
+        const componentAttrs = this.contentTypeUID.components[id].schema
           .attributes;
         componentAttrs.__component = id;
         componentAttrs.__label = key;
@@ -132,8 +106,8 @@ export default class StrapiForm {
     });
   }
 
-  async getFormSchema(params: any) {
-    this.existingModel = await this.getExistingEntry(params);
+  async getSchema(existingEntry: object) {
+    this.existingModel = existingEntry;
     await this.getContentType();
     this.gatherSchema();
     return this.fields;
