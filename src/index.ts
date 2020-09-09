@@ -8,7 +8,7 @@ interface Authentication {
   password: string,
 }
 
-export default class Factory {
+export class Factory {
   private baseURL: string;
   public sdk: FormActionable;
 
