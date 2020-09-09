@@ -29,7 +29,7 @@ export default class StrapiForm {
   async getContentType(): Promise<void> {
     const res = await fetch(`${this.url}/${this.contentTypeUID}`);
     const json: ContentTypeResponse = await res.json();
-    if (json.statusCode) throw new Error(json.message);
+    if (json && json.statusCode) throw new Error(json.message);
     this.contentType = json.data.contentType;
     this.components = json.data && json.data.components;
   }
