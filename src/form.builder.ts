@@ -51,12 +51,14 @@ export default class StrapiForm {
     return { ...this.formState };
   }
 
-  updateSchema(key: string, value: string, parent: string) {
+  updateFormState(key: string, value: string, parent: string) {
     if (parent) {
       this.formState[parent][key] = value;
     } else {
       this.formState[key] = value;
     }
+
+    return this.formState;
   }
 
   isComponent(attribute: Attribute): boolean {
