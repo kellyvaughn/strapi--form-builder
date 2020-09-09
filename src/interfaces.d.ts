@@ -1,9 +1,25 @@
 export interface Schema {
-  attributes: object
+  attributes: AttributeList
+}
+
+export interface FormBuilderOutput {
+  fields: Fields,
+  formState: Fields,
+}
+
+interface ComponentField {
+  __component?: string
+  __label?: string
+  __id?: number
+  schema: Schema
+}
+
+interface AttributeList {
+  [key: string]: Attribute
 }
 
 export interface Entry {
-  id: number
+  id?: number
 }
 
 export interface ContentType {
@@ -12,7 +28,7 @@ export interface ContentType {
 
 export interface ContentTypeBase {
   contentType?: ContentType
-  components?: ContentType[]
+  components?: ComponentList
 }
 
 export interface ContentTypeResponse {
@@ -28,11 +44,16 @@ export interface Attribute {
   value?: any
   __component?: string
   __label?: string
+  __id?: number
 }
 
 export interface Fields {
-  content: Attribute[];
+  id?: number
   [key: string]: any
+}
+
+export interface ComponentList {
+  [key: string]: ContentType
 }
 
 export interface FormActions {

@@ -20,7 +20,7 @@ export class Factory {
 
   async getForm(contentTypeUID: string, existingEntry: any) {
     return {
-      fields: await new StrapiFormBuilder(this.baseURL, contentTypeUID).getSchema(existingEntry),
+      form: await new StrapiFormBuilder(this.baseURL, contentTypeUID).getSchema(existingEntry),
       actions: new StrapiFormMethodsDecorator(contentTypeUID, this.sdk)
     }
   }

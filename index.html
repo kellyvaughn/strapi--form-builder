@@ -10,7 +10,7 @@
   <script src="./dist/main.js"></script>
   <script>
     const baseURL = "https://recharge-settings.herokuapp.com";
-    const contentType = "application::global-settings.global-settings";
+    const contentType = "application::portal-page-settings.portal-page-settings";
     const FormFactory = new StrapiFormBuilder.Factory(baseURL, {
       identifier: "flutterhabit.com",
       password: "E!p7jsS$6aHsMxRy0kjVtkwev"
@@ -23,7 +23,7 @@
       "_limit": 1
     };
 
-    const existingEntries = Client.getEntries("global-settings", {
+    const existingEntries = Client.getEntries("portal-page-settings", {
       "_where[users.domain_contains]": "flutterhabit",
       "_limit": 1
     }).then(entries => {

@@ -1,28 +1,22 @@
-import {
-  AttributeTypesWhitelist,
-  ATTIBUTE_TYPES,
-  AttributeTypesBlacklist,
-  WhitelistKeys
-} from "./types/content-attribute-types";
+import { ATTIBUTE_TYPES, AttributeTypesBlacklist } from "./types/content-attribute-types";
 
 import {
-  Entry,
-  ContentTypeBase,
   ContentTypeResponse,
   Attribute,
-  Fields
+  Fields,
+  ContentType,
+  FormBuilderOutput,
+  ComponentList
 } from "./interfaces";
 
 export default class StrapiForm {
   private url: string;
-  private acceptedTypes: string[] = AttributeTypesWhitelist;
   private blacklistedProps = AttributeTypesBlacklist;
-  private whitelistKeys = WhitelistKeys;
-  private contentType: ContentTypeBase;
-  private contentTypeUID: string
+  private contentType: ContentType;
+  private contentTypeUID: string;
+  private components: ComponentList;
   public fields: Fields;
-  public request: Fields;
-  public existingModel: any;
+  public formState: Fields;
 
   constructor(
     baseURL: string,
@@ -35,93 +29,110 @@ export default class StrapiForm {
   async getContentType(): Promise<void> {
     const res = await fetch(`${this.url}/${this.contentTypeUID}`);
     const json: ContentTypeResponse = await res.json();
-    if (json.statusCode)
-    this.contentType = json.data;
+    if (json.statusCode) throw new Error(json.message);
+    this.contentType = json.data.contentType;
+    this.components = json.data && json.data.components;
   }
 
-  setRequestState(key: string, componentId: string, value: any): Fields {
+  setRequestState(key: string, componentId: string, value: any): Fields | {} {
     if (parent) {
-      for (const component of this.request.content) {
+      for (const component of this.formState.content) {
         if (component.__component === componentId) {
           component[key] = value;
         }
       }
     }
 
-    this.request[key] = value;
+    this.formState[key] = value;
     return this.fields;
+  }
+
+  getFormState() {
+    return { ...this.formState };
   }
 
   updateSchema(key: string, value: string, parent: string) {
     if (parent) {
-      this.fields[parent][key] = value;
+      this.formState[parent][key] = value;
     } else {
-      this.fields[key] = value;
+      this.formState[key] = value;
     }
   }
 
-  isBuildable(field: Attribute): boolean {
-    return field && field.type && this.acceptedTypes.includes(field.type);
-  }
-
-  isComponent(field: Attribute): boolean {
-    return field.type === ATTIBUTE_TYPES.COMPONENT;
-  }
-
-  isValidType(key: string, attribute: Attribute): boolean {
-    return (
-      attribute &&
-      this.isBuildable(attribute) &&
-      !this.isComponent(attribute) &&
-      this.acceptedTypes.includes(attribute.type) !== false &&
-      !this.blacklistedProps.includes(key)
-    );
+  isComponent(attribute: Attribute): boolean {
+    return attribute && attribute.type === ATTIBUTE_TYPES.COMPONENT;
   }
 
   isSimpleType(key: string, attribute: Attribute): boolean {
-    return (!this.isComponent(attribute) &&
-      this.isValidType(key, attribute)) ||
-      this.whitelistKeys.includes(key);
+    return attribute && this.isComponent(attribute) && this.canEdit(key);
   }
 
-  buildSimpleType(key: string, attribute: Attribute, componentKey?: string): void {
-    if (this.isSimpleType(key, attribute)) {
-      this.fields[key] = attribute;
-      this.fields[key].__label = key;
-      this.fields[key].value = componentKey
-        ? this.existingModel[componentKey][key]
-        : this.existingModel[key];
+  canEdit(key: string): boolean {
+    return !this.blacklistedProps.includes(key);
+  }
+
+  buildComponent(componentKey: string, attribute: Attribute): void {
+    if (!this.components[attribute.component].schema.attributes) return;
+
+    const componentAttrs = this.components[attribute.component].schema.attributes;
+    console.log(this.formState[componentKey])
+    componentAttrs.id = this.formState[componentKey] && this.formState[componentKey].id || null;
+
+    for (const childKey in componentAttrs) {
+      if (this.canEdit(childKey)) {
+        this.setField(childKey, componentAttrs[childKey], componentKey);
+        this.setFormState(childKey, componentKey);
+      }
     }
   }
 
-  buildComplexType(key: string, attribute: Attribute): void {
-    if (this.isComponent(attribute)) {
-      const componentAttrs: Attribute = this.contentType.components[attribute.component].schema.attributes;
-      componentAttrs.__component = attribute.component;
-      componentAttrs.__label = key;
-      this.fields.content.push(componentAttrs);
-      this.gatherSchema(componentAttrs, key);
+  setFormState(key: string, componentKey?: string): void {
+    if (!this.canEdit(key)) return;
+    if (componentKey) {
+      this.formState[componentKey] = this.formState[componentKey] || {};
+      this.formState[componentKey][key] = this.formState[componentKey][key] || null;
+    } else {
+      this.formState[key] = this.formState[key] || null;
     }
   }
 
-  gatherSchema(parent?: any, componentKey?: string): void {
-    parent = parent || this.contentType.contentType.schema.attributes;
-
-    Object.keys(parent).map((key) => {
-      if (this.isSimpleType(key, parent[key])) {
-        this.buildSimpleType(key, parent[key], componentKey);
-      }
-
-      if (this.isComponent(parent[key])) {
-        this.buildComplexType(key, parent[key]);
-      }
-    });
+  setField(key: string, attribute: Attribute, componentKey?: string) {
+    if (!this.canEdit(key)) return;
+    if (componentKey) {
+      this.fields[componentKey] = this.fields[componentKey] || {};
+      this.fields[componentKey][key] = {
+        ...attribute,
+        value: this.formState[componentKey][key] || null
+      };
+    } else {
+      this.fields[key] = {
+        ...attribute,
+        value: this.formState[key] || null
+      };
+    }
   }
 
-  async getSchema(existingEntry: Entry): Promise<Fields> {
-    this.existingModel = existingEntry;
+  gatherSchema(): void {
+    this.fields = {};
+    const attributes = this.contentType.schema.attributes;
+
+    for (const key in attributes) {
+      if (this.isComponent(attributes[key])) {
+        this.buildComponent(key, attributes[key])
+      } else {
+        this.setField(key, attributes[key]);
+        this.setFormState(key);
+      }
+    }
+  }
+
+  async getSchema(existingEntry?: Fields): Promise<FormBuilderOutput> {
+    this.formState = existingEntry || {};
     await this.getContentType();
     this.gatherSchema();
-    return this.fields;
+    return {
+      fields: this.fields,
+      formState: this.formState
+    };
   }
 }

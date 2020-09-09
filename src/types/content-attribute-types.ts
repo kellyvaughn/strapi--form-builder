@@ -31,6 +31,10 @@ export const AttributeTypesWhitelist: string[] = [
 export const AttributeTypesBlacklist: string[] = [
   "id",
   "users",
+  "created_by",
+  "created_at",
+  "updated_at",
+  "updated_at"
 ];
 
 export const WhitelistKeys: string[] = [
