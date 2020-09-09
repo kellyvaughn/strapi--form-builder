@@ -51,7 +51,7 @@ export default class StrapiForm {
     return { ...this.formState };
   }
 
-  updateFormState(key: string, value: string, parent: string) {
+  updateFormState(key: string, value: string, parent: string): Fields {
     if (parent) {
       this.formState[parent][key] = value;
     } else {
