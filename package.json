@@ -1,8 +1,8 @@
 {
   "name": "@thetaproom/strapi-form-builder",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "A simple library for generating form data and form requests using the content manager API",
-  "main": "index.js",
+  "main": "./dist/main.js",
   "scripts": {
     "build": "webpack --progress --colors",
     "start": "webpack-dev-server --progress --colors",
