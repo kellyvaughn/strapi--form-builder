@@ -1,141 +1,136 @@
+import { ATTIBUTE_TYPES, AttributeTypesBlacklist } from "./types/content-attribute-types";
+
+import {
+  ContentTypeResponse,
+  Attribute,
+  Fields,
+  ContentType,
+  FormBuilderOutput,
+  ComponentList
+} from "./interfaces";
+
 export default class StrapiForm {
-  private baseURL: string;
   private url: string;
-  private acceptedTypes = [
-    "string",
-    "text",
-    "integer",
-    "media",
-    "component",
-    "boolean",
-    "enumeration",
-    "label",
-  ];
-  private blacklistedProps = ["id", "users"];
-  private whitelistKeys = ["__component", "__label"];
-  private apiContentType: any = {};
-  public fields: any = {};
-  public request: any = {};
-  public apiID: string = "";
-  public strapiSDK: any;
-  public existingModel: object;
+  private blacklistedProps = AttributeTypesBlacklist;
+  private contentType: ContentType;
+  private contentTypeUID: string;
+  private components: ComponentList;
+  public fields: Fields;
+  public formState: Fields;
 
   constructor(
     baseURL: string,
-    contentType: any,
-    strapiSDk: any
+    contentTypeUID: string
   ) {
-    this.strapiSDK = strapiSDk;
-    this.baseURL = baseURL;
-    this.url = `${this.baseURL}/content-manager/content-types/${contentType}`;
+    this.contentTypeUID = contentTypeUID;
+    this.url = `${baseURL}/content-manager/content-types`;
   }
 
-  get appUrl() {
-    return `${this.baseURL}/${this.apiID}`;
+  async getContentType(): Promise<void> {
+    const res = await fetch(`${this.url}/${this.contentTypeUID}`);
+    const json: ContentTypeResponse = await res.json();
+    if (json && json.statusCode) throw new Error(json.message);
+    this.contentType = json.data.contentType;
+    this.components = json.data && json.data.components;
   }
 
-  async getContentType() {
-    const res = await fetch(this.url);
-    const json = await res.json();
-
-    if (typeof json !== "object" && json.data) return {};
-
-    this.apiContentType = json.data;
-    this.apiID = this.apiContentType.contentType.apiID;
-  }
-
-  async getExistingEntry(params: any) {
-    return await this.strapiSDK.getEntries(this.apiID, params);
-  }
-
-  setRequestBody() {
-    Object.keys(this.fields).map(key => {
-      if (this.fields[key] && key !== "content") {
-        this.fields[key] = this.fields[key].value
-      }
-
-      this.fields.content.map((component: any) => {
-        if (component.__label === key) {
-          component.value = this.existingModel[key];
-        }
-      });
-    });
-  }
-
-  updateSchema(key: string, value: string, parent: string) {
+  setRequestState(key: string, componentId: string, value: any): Fields | {} {
     if (parent) {
-      this.fields[parent][key] = value;
+      for (const component of this.formState.content) {
+        if (component.__component === componentId) {
+          component[key] = value;
+        }
+      }
+    }
+
+    this.formState[key] = value;
+    return this.fields;
+  }
+
+  updateFormState(key: string, value: string, parent: string): Fields {
+    if (parent) {
+      this.formState[parent][key] = value;
     } else {
-      this.fields[key] = value;
+      this.formState[key] = value;
+    }
+
+    return this.formState;
+  }
+
+  isComponent(attribute: Attribute): boolean {
+    return attribute && attribute.type === ATTIBUTE_TYPES.COMPONENT;
+  }
+
+  isSimpleType(key: string, attribute: Attribute): boolean {
+    return attribute && this.isComponent(attribute) && this.canEdit(key);
+  }
+
+  canEdit(key: string): boolean {
+    return !this.blacklistedProps.includes(key);
+  }
+
+  buildComponent(componentKey: string, attribute: Attribute): void {
+    if (!this.components[attribute.component].schema.attributes) return;
+
+    const componentAttrs = this.components[attribute.component].schema.attributes;
+    console.log(this.formState[componentKey])
+    componentAttrs.id = this.formState[componentKey] && this.formState[componentKey].id || null;
+
+    for (const childKey in componentAttrs) {
+      if (this.canEdit(childKey)) {
+        this.setField(childKey, componentAttrs[childKey], componentKey);
+        this.setFormState(childKey, componentKey);
+      }
     }
   }
 
-  async create(data: any) {
-    return await this.strapiSDK.createEntry(this.apiID, data);
+  setFormState(key: string, componentKey?: string): void {
+    if (!this.canEdit(key)) return;
+    if (componentKey) {
+      this.formState[componentKey] = this.formState[componentKey] || {};
+      this.formState[componentKey][key] = this.formState[componentKey][key] || null;
+    } else {
+      this.formState[key] = this.formState[key] || null;
+    }
   }
 
-  async update(id: any, data: any) {
-    return await this.strapiSDK.updateEntry(this.apiID, id, data);
+  setField(key: string, attribute: Attribute, componentKey?: string) {
+    if (!this.canEdit(key)) return;
+    if (componentKey) {
+      this.fields[componentKey] = this.fields[componentKey] || {};
+      this.fields[componentKey][key] = {
+        ...attribute,
+        value: this.formState[componentKey][key] || null
+      };
+    } else {
+      this.fields[key] = {
+        ...attribute,
+        value: this.formState[key] || null
+      };
+    }
   }
 
-  async search(params: any) {
-    return await this.strapiSDK.getEntries(this.apiID, params);
-  }
+  gatherSchema(): void {
+    this.fields = {};
+    const attributes = this.contentType.schema.attributes;
 
-  async delete(id: any) {
-    return await this.strapiSDK.deleteEntry(this.apiID, id);
-  }
-
-  isBuildable(field: any) {
-    return field && field.type && this.acceptedTypes.includes(field.type);
-  }
-
-  isComponent(field: any) {
-    return field.type === "component";
-  }
-
-  isValidType(key: any, item: any) {
-    return (
-      item &&
-      this.isBuildable(item) &&
-      !this.isComponent(item) &&
-      this.acceptedTypes.includes(item.type) !== false &&
-      !this.blacklistedProps.includes(key)
-    );
-  }
-
-  gatherSchema(parent?: any, componentKey?: string) {
-    parent = parent || this.apiContentType.contentType.schema.attributes;
-
-    Object.keys(parent).map((key) => {
-      if (
-        (!this.isComponent(parent[key]) &&
-          this.isValidType(key, parent[key])) ||
-        this.whitelistKeys.includes(key)
-      ) {
-        this.fields[key] = parent[key];
-        this.fields[key].__label = key;
-        this.fields[key].value = componentKey
-          ? this.existingModel[componentKey][key]
-          : this.existingModel[key];
+    for (const key in attributes) {
+      if (this.isComponent(attributes[key])) {
+        this.buildComponent(key, attributes[key])
+      } else {
+        this.setField(key, attributes[key]);
+        this.setFormState(key);
       }
-
-      if (this.isComponent(parent[key])) {
-        const id = parent[key].component;
-        const componentAttrs = this.apiContentType.components[id].schema
-          .attributes;
-        componentAttrs.__component = id;
-        componentAttrs.__label = key;
-        this.fields.content.push(componentAttrs);
-        this.gatherSchema(componentAttrs);
-      }
-    });
+    }
   }
 
-  async getFormSchema(params: any) {
-    this.existingModel = await this.getExistingEntry(params);
+  async getSchema(existingEntry?: Fields): Promise<FormBuilderOutput> {
+    this.formState = existingEntry || {};
     await this.getContentType();
     this.gatherSchema();
-    return this.fields;
+    return {
+      fields: this.fields,
+      formState: this.formState
+    };
   }
 }
