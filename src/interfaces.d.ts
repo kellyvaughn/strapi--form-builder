@@ -7,6 +7,18 @@ export interface FormBuilderOutput {
   formState: Fields,
 }
 
+export interface MetadataData {
+  label: string
+}
+
+export interface Metadata {
+  [key: string]: MetadataData
+}
+
+export interface MetadataList {
+  [key: string]: Metadata
+}
+
 interface ComponentField {
   __component?: string
   __label?: string
@@ -24,6 +36,7 @@ export interface Entry {
 
 export interface ContentType {
   schema?: Schema
+  metadatas?: MetadataList
 }
 
 export interface ContentTypeBase {

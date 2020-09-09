@@ -6,13 +6,15 @@ import {
   Fields,
   ContentType,
   FormBuilderOutput,
-  ComponentList
+  ComponentList,
+  MetadataList
 } from "./interfaces";
 
 export default class StrapiForm {
   private url: string;
   private blacklistedProps = AttributeTypesBlacklist;
   private contentType: ContentType;
+  private metadatas: MetadataList
   private contentTypeUID: string;
   private components: ComponentList;
   public fields: Fields;
@@ -31,6 +33,7 @@ export default class StrapiForm {
     const json: ContentTypeResponse = await res.json();
     if (json && json.statusCode) throw new Error(json.message);
     this.contentType = json.data.contentType;
+    this.metadatas = json.data.contentType.metadatas;
     this.components = json.data && json.data.components;
   }
 
@@ -100,14 +103,24 @@ export default class StrapiForm {
       this.fields[componentKey] = this.fields[componentKey] || {};
       this.fields[componentKey][key] = {
         ...attribute,
+        __label: this.buildLabel(key),
+        __parent: componentKey,
         value: this.formState[componentKey][key] || null
       };
     } else {
       this.fields[key] = {
         ...attribute,
+        __label: this.buildLabel(key),
         value: this.formState[key] || null
       };
     }
+  }
+
+  buildLabel(key: string): string | null {
+    if (!key) return key;
+    const capitalized = key.charAt(0).toUpperCase() + key.slice(1);
+    const label = capitalized.match(/[A-Z][a-z]+/g);
+    return label.join(" ");
   }
 
   gatherSchema(): void {
