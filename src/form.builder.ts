@@ -100,7 +100,9 @@ export default class StrapiForm {
   setField(key: string, attribute: Attribute, componentKey?: string) {
     if (!this.canEdit(key)) return;
     if (componentKey) {
-      this.fields[componentKey] = this.fields[componentKey] || {};
+      this.fields[componentKey] = this.fields[componentKey] || {
+        type: ATTIBUTE_TYPES.COMPONENT
+      };
       this.fields[componentKey][key] = {
         ...attribute,
         __label: this.buildLabel(key),
