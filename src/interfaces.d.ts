@@ -2,9 +2,15 @@ export interface Schema {
   attributes: AttributeList
 }
 
+export interface AuthenticatedUser {
+  user: object;
+  jwt: string;
+}
+
 export interface FormBuilderOutput {
-  fields: Fields,
-  formState: Fields,
+  fields: Fields;
+  formState: Fields;
+  user?: AuthenticatedUser,
 }
 
 export interface MetadataData {
@@ -77,6 +83,8 @@ export interface FormActions {
 }
 
 export interface FormActionable {
+  getToken(): string|false;
+  login: (username: string, password: string) => Promise<AuthenticatedUser>;
   createEntry: (apiID: string, body: object) => any;
   updateEntry: (apiID: string, id: string | number, data: object) => any;
   getEntries: (apiID: string, params: object) => any;

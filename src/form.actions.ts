@@ -1,8 +1,4 @@
-import {
-  Entry,
-  Fields,
-  FormActionable,
-} from "./interfaces";
+import { Entry, Fields, FormActionable, AuthenticatedUser } from "./interfaces";
 
 
 export class StrapiFormMethodsDecorator {
