@@ -100,7 +100,8 @@ export default class StrapiForm {
     if (!this.canEdit(key)) return;
     if (componentKey) {
       this.fields[componentKey] = this.fields[componentKey] || {
-        type: ATTIBUTE_TYPES.COMPONENT
+        type: ATTIBUTE_TYPES.COMPONENT,
+        repeatable: this.contentType.schema.attributes[componentKey].repeatable
       };
       this.fields[componentKey][key] = {
         ...attribute,

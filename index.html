@@ -10,7 +10,7 @@
   <script src="./dist/main.js"></script>
   <script>
     const baseURL = "https://recharge-settings.herokuapp.com";
-    const contentType = "application::portal-page-settings.portal-page-settings";
+    const contentType = "application::retention-flow.retention-flow";
     const FormFactory = new StrapiFormBuilder.Factory(baseURL, {
       identifier: "test_user",
       password: "password"
@@ -19,7 +19,7 @@
     const Client = FormFactory.getStrapiAPI();
 
     const opts = {
-      "_where[users.domain_contains]": "flutterhabit",
+      "_where[users.username]": "test_user",
       "_limit": 1
     };
 

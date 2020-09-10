@@ -61,6 +61,7 @@ export interface Attribute {
   component?: string
   type?: string
   value?: any
+  repeatable ?: boolean
   __component?: string
   __label?: string
   __id?: number
