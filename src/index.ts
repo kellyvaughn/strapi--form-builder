@@ -9,8 +9,8 @@ interface Authentication {
 }
 
 export class Factory {
-  private baseURL: string;
   public sdk: FormActionable;
+  private baseURL: string;
   private auth: Authentication;
 
   constructor(baseURL: string, auth: Authentication) {
@@ -21,15 +21,10 @@ export class Factory {
   }
 
   async getForm(contentTypeUID: string, existingEntry: any) {
-    const token = this.sdk.getToken();
-    let user: AuthenticatedUser;
-
-    if (!token) {
-      user = await this.sdk.login(
-        this.auth.identifier,
-        this.auth.password
-      );
-    }
+    const user = await this.sdk.login(
+      this.auth.identifier,
+      this.auth.password
+    );
 
     return {
       form: await new StrapiFormBuilder(this.baseURL, contentTypeUID).getSchema(
