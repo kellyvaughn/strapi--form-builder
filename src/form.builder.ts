@@ -76,7 +76,6 @@ export default class StrapiForm {
     if (!this.components[attribute.component].schema.attributes) return;
 
     const componentAttrs = this.components[attribute.component].schema.attributes;
-    console.log(this.formState[componentKey])
     componentAttrs.id = this.formState[componentKey] && this.formState[componentKey].id || null;
 
     for (const childKey in componentAttrs) {
@@ -107,7 +106,7 @@ export default class StrapiForm {
         ...attribute,
         __label: this.buildLabel(key),
         __parent: componentKey,
-        value: this.formState[componentKey][key] || null
+        value: this.formState[componentKey] && this.formState[componentKey][key] || null
       };
     } else {
       this.fields[key] = {

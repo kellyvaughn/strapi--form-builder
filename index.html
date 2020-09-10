@@ -12,8 +12,8 @@
     const baseURL = "https://recharge-settings.herokuapp.com";
     const contentType = "application::portal-page-settings.portal-page-settings";
     const FormFactory = new StrapiFormBuilder.Factory(baseURL, {
-      identifier: "flutterhabit.com",
-      password: "E!p7jsS$6aHsMxRy0kjVtkwev"
+      identifier: "test_user",
+      password: "password"
     });
 
     const Client = FormFactory.getStrapiAPI();
@@ -33,7 +33,7 @@
      * - looks for an existing entry based on params i.e. _where[users.domain_contains]
      * - if an existing records is set
      */
-      FormFactory.getForm(contentType, entries && entries[0]).then(schema => {
+      FormFactory.getForm(contentType, {}).then(schema => {
         debugger;
       });
     });
