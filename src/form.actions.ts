@@ -8,7 +8,6 @@ import {
 export class StrapiFormMethodsDecorator {
   private apiID: string;
   private strapiSDK: FormActionable;
-  private existingModel: Entry;
 
   constructor(contentTypeUID: string, strapiSDK: FormActionable) {
     this.strapiSDK = strapiSDK;
@@ -38,7 +37,7 @@ export class StrapiFormMethodsDecorator {
   }
 
   async update(data: Fields, id ?: string | number): Promise<Entry> {
-    return await this.strapiSDK.updateEntry(this.apiID, id || this.existingModel.id, data);
+    return await this.strapiSDK.updateEntry(this.apiID, id, data);
   }
 
   async search(params: object): Promise<Entry[]> {
