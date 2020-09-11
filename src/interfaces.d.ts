@@ -58,6 +58,7 @@ export interface ContentTypeResponse {
 }
 
 export interface Attribute {
+  default?: any
   component?: string
   type?: string
   value?: any

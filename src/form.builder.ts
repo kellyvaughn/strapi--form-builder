@@ -89,10 +89,14 @@ export default class StrapiForm {
   setFormState(key: string, componentKey?: string): void {
     if (!this.canEdit(key)) return;
     if (componentKey) {
-      this.formState[componentKey] = this.formState[componentKey] || {};
-      this.formState[componentKey][key] = this.formState[componentKey][key] || null;
+      this.formState[componentKey] = this.formState[componentKey] ? this.formState[componentKey] : {};
+      this.formState[componentKey][key] = this.formState[componentKey][key]
+        ? this.formState[componentKey][key]
+        : this.fields[componentKey][key].default;
     } else {
-      this.formState[key] = this.formState[key] || null;
+      this.formState[key] = this.formState[key]
+        ? this.formState[key]
+        : this.fields[key].default;
     }
   }
 
@@ -107,7 +111,7 @@ export default class StrapiForm {
         ...attribute,
         __label: this.buildLabel(key),
         __parent: componentKey,
-        value: this.formState[componentKey] && this.formState[componentKey][key] || null
+        value: this.formState[componentKey] && this.formState[componentKey][key] || attribute.default || null
       };
     } else {
       this.fields[key] = {
